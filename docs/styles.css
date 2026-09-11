@@ -40,16 +40,15 @@ button { font-family: inherit; }
 .site-header {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(128deg, #175f36 0%, #2e9e5b 46%, #18a4a4 100%);
+  background: #123a26 url('banner.jpg') center/cover no-repeat;
   color: #fff;
   padding: 20px 24px 78px;
 }
 .site-header::before {
-  content: ""; position: absolute; inset: -40% -10% auto -10%; height: 150%;
+  content: ""; position: absolute; inset: 0;
   background:
-    radial-gradient(38% 55% at 12% 18%, rgba(255,255,255,.28), transparent 65%),
-    radial-gradient(42% 60% at 88% 8%, rgba(126, 240, 205, .30), transparent 68%),
-    radial-gradient(30% 45% at 62% 92%, rgba(255, 236, 168, .22), transparent 70%);
+    linear-gradient(180deg, rgba(7,26,17,.30) 0%, rgba(7,26,17,0) 42%),
+    linear-gradient(90deg, rgba(7,26,17,.90) 0%, rgba(7,26,17,.68) 38%, rgba(7,26,17,.30) 66%, rgba(7,26,17,.05) 100%);
   pointer-events: none;
 }
 .site-header .wrap { position: relative; max-width: 1180px; margin: 0 auto; }
@@ -508,3 +507,11 @@ body.editing .cat-card { border-color: #d9ece2; }
 .um-item .um-date { font-size: 11.5px; color: var(--muted-2); }
 .um-sep { border: none; border-top: 1px dashed var(--line-2); margin: 20px 0 16px; }
 .um-pw h4 { margin: 0 0 10px; font-size: 14px; }
+
+/* ---------- 标签管理 ---------- */
+.tm-add { display: flex; gap: 8px; margin-top: 10px; }
+.tm-add input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; font-family: inherit; outline: none; }
+.tm-add input:focus { border-color: var(--green); }
+.tm-chip { cursor: default; }
+.tm-x { cursor: pointer; font-weight: 700; margin-left: 7px; opacity: .75; }
+.tm-x:hover { opacity: 1; }
