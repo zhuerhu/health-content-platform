@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="健康内容中台 · 在线版：管理员上传视频/封面/文案，所有人打开同一链接即可浏览。" />
+  <title>健康内容中台</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand-row">
+        <div class="brand">
+          <span class="logo">🌿</span>
+          <div>
+            <h1>健康内容中台</h1>
+            <p>内容生产 → 标签化管理 → 一站式浏览</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="edit-toggle" class="ghost-btn" title="进入编辑模式，可上传与增删改内容" style="display:none">✏️ 编辑模式</button>
+          <button id="fav-toggle" class="ghost-btn" title="只看我收藏的内容">♡ 我的收藏 <b id="fav-count">0</b></button>
+          <button id="admin-toggle" class="ghost-btn" title="管理员登录后可上传内容">🔐 管理员登录</button>
+          <span id="user-box" class="user-box" style="display:none"></span>
+          <button id="logout-btn" class="ghost-btn" style="display:none">退出</button>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h2>按标签，找到<em>刚刚好</em>的健康内容</h2>
+        <p>6 大内容库 · 三维标签体系（内容标签 / 内容形态 / 用户旅程）。管理员上传后，所有人打开本链接即可浏览。</p>
+        <div class="stats" id="stats"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <section class="cats" id="cats"></section>
+
+    <div class="toolbar" id="toolbar">
+      <div class="search-box">
+        <span class="ic">🔍</span>
+        <input id="search" type="text" placeholder="搜索标题、摘要、正文或标签…" />
+        <span class="kbd">/</span>
+      </div>
+      <select id="category" class="filter-select">
+        <option value="">全部分类</option>
+      </select>
+      <select id="sort" class="filter-select">
+        <option value="new">最新优先</option>
+        <option value="old">最早优先</option>
+        <option value="title">按标题排序</option>
+      </select>
+      <button id="reset" class="btn">重置筛选</button>
+      <button id="refresh" class="btn" title="从线上重新拉取最新内容">↻ 刷新</button>
+    </div>
+
+    <div class="editbar" id="editbar">
+      <span class="eb-tag">✏️ 管理</span>
+      <span class="eb-state" id="ed-state"></span>
+      <span class="eb-grow"></span>
+      <button class="btn btn-primary" id="btn-new">＋ 新建内容</button>
+    </div>
+
+    <section class="filters">
+      <div class="filter-group">
+        <div class="label"><b>内容标签</b><span class="tip">（可多选，同组为"或"）</span></div>
+        <div class="pills" id="disease-pills"></div>
+      </div>
+      <div class="filter-group">
+        <div class="label"><b>内容形态</b><span class="tip">（可多选）</span></div>
+        <div class="pills" id="format-pills"></div>
+      </div>
+      <div class="filter-group">
+        <div class="label"><b>用户旅程 / 内容深度</b><span class="tip">（认知层 → 行动层 → 深化层）</span></div>
+        <div class="pills" id="journey-pills"></div>
+      </div>
+    </section>
+
+    <div class="active-bar" id="active-bar"></div>
+
+    <div class="result-bar">
+      <div class="count">共 <b id="total">0</b> 条内容<span id="range" class="tip"></span></div>
+      <div class="ops">
+        <div class="seg">
+          <button data-view="grid" class="on" title="网格视图">▦ 网格</button>
+          <button data-view="list" title="列表视图">☰ 列表</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none;">
+      <span class="ic">🍃</span>
+      <div class="t">还没有内容</div>
+      <div class="s">管理员点右上角「🔐 管理员登录」后即可上传第一条视频。</div>
+    </div>
+  </div>
+
+  <button class="to-top" id="to-top" title="返回顶部">↑</button>
+
+  <!-- 详情弹窗 -->
+  <div class="modal-mask" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <button id="modal-edit" title="编辑这条内容" style="display:none;">✎</button>
+        <button id="modal-fav" class="fav" title="收藏">♡</button>
+        <button id="modal-close" title="关闭（Esc）">×</button>
+      </div>
+      <div class="m-cover" id="m-cover">🌿</div>
+      <div class="m-body">
+        <h2 class="m-title" id="m-title"></h2>
+        <div class="m-time" id="m-time"></div>
+        <div class="m-meta" id="m-meta"></div>
+        <div class="m-text" id="m-text"></div>
+        <div class="m-video" id="m-video"></div>
+        <div class="related" id="m-related" style="display:none;">
+          <h4>🔗 相关推荐</h4>
+          <div class="related-list" id="m-related-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 内容编辑器 -->
+  <div class="modal-mask" id="editor">
+    <div class="modal editor">
+      <div class="ed-head">
+        <h3 id="ed-head-title">新建内容</h3>
+        <button class="ed-x" id="ed-close" title="关闭（Esc）">×</button>
+      </div>
+      <div class="ed-body">
+        <div class="field">
+          <label>标题<span class="req">必填</span></label>
+          <input id="ed-title" type="text" placeholder="例如：高血压就像水管水压太高" />
+        </div>
+
+        <div class="ed-row">
+          <div class="field">
+            <label>所属分类<span class="req">必填</span></label>
+            <select id="ed-category"></select>
+          </div>
+          <div class="field">
+            <label>创建日期</label>
+            <input id="ed-date" type="date" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>内容标签<span class="hint">可多选</span></label>
+          <div class="check-grid" id="ed-disease"></div>
+        </div>
+        <div class="field">
+          <label>内容形态<span class="hint">可多选</span></label>
+          <div class="check-grid" id="ed-format"></div>
+        </div>
+        <div class="field">
+          <label>用户旅程 / 内容深度</label>
+          <div class="check-grid" id="ed-journey"></div>
+        </div>
+
+        <div class="field">
+          <label>摘要<span class="hint">卡片上展示的两行</span></label>
+          <textarea id="ed-summary" rows="2" placeholder="一句话讲清这条内容解决什么问题"></textarea>
+        </div>
+        <div class="field">
+          <label>正文<span class="hint">换行即分段</span></label>
+          <textarea id="ed-body" rows="7" placeholder="正文内容…"></textarea>
+        </div>
+
+        <div class="field">
+          <label>封面图<span class="hint">可选</span></label>
+          <div class="cover-row">
+            <div class="cover-prev" id="ed-cover-prev">🌿</div>
+            <div class="cover-ctrl">
+              <div class="cover-btns">
+                <button type="button" class="btn" id="ed-cover-pick">选择本地图片</button>
+                <button type="button" class="btn" id="ed-cover-clear">移除</button>
+              </div>
+              <input id="ed-cover-url" type="text" placeholder="或粘贴图片地址 https://…" />
+              <div class="hint" id="ed-cover-hint"></div>
+            </div>
+          </div>
+          <input id="ed-cover-file" type="file" accept="image/*" hidden />
+        </div>
+
+        <div class="field">
+          <label>视频文件<span class="hint">可选，建议 ≤ 25MB（GitHub 单文件上限 100MB）</span></label>
+          <div class="cover-row">
+            <div class="cover-prev" id="ed-video-prev">🎬</div>
+            <div class="cover-ctrl">
+              <div class="cover-btns">
+                <button type="button" class="btn" id="ed-video-pick">选择本地视频</button>
+                <button type="button" class="btn" id="ed-video-clear">移除视频</button>
+              </div>
+              <input id="ed-video-file" type="file" accept="video/*" hidden />
+              <div class="hint" id="ed-video-hint">未选择视频文件</div>
+            </div>
+          </div>
+          <input id="ed-video" type="text" placeholder="或粘贴视频链接 https://…（大视频建议用链接）" style="margin-top:10px" />
+        </div>
+
+        <div class="ed-error" id="ed-error"></div>
+        <div class="ed-actions">
+          <button class="btn btn-primary" id="ed-save">保存并发布</button>
+          <button class="btn" id="ed-cancel">取消</button>
+          <span class="eb-grow"></span>
+          <button class="btn danger" id="ed-delete" style="display:none;">删除这条</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员登录（粘贴 GitHub 令牌） -->
+  <div class="login-mask" id="loginbox">
+    <div class="login-box">
+      <div class="login-logo">🔐</div>
+      <h2>管理员登录</h2>
+      <p class="login-sub">粘贴你的 GitHub 令牌即可上传内容（仅保存在你本机浏览器，不会外传）</p>
+      <input id="tk" class="lg-input" type="password" placeholder="ghp_… 或 github_pat_…" autocomplete="off" />
+      <div class="cover-btns" style="justify-content:center;margin-bottom:10px">
+        <button id="tk-btn" class="btn btn-primary lg-btn" style="width:auto;padding:10px 26px">登录</button>
+        <button id="tk-cancel" class="btn">取消</button>
+      </div>
+      <div id="lg-error" class="lg-error"></div>
+      <div class="lg-hint">
+        获取方式：GitHub → 右上角头像 → Settings → Developer settings → Personal access tokens →
+        <b>Tokens (classic)</b> → Generate new token → 勾选 <b>repo</b> → 生成的 <code>ghp_…</code> 粘到这里。
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
