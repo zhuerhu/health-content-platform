@@ -8,6 +8,20 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- 登录门禁 -->
+  <div id="login-mask" class="login-mask">
+    <div class="login-box">
+      <div class="login-logo">🌿</div>
+      <h2>健康内容中台</h2>
+      <p class="login-sub">登录后查看内容（管理员可上传与管理）</p>
+      <input id="lg-user" class="lg-input" placeholder="用户名" autocomplete="username" />
+      <input id="lg-pass" class="lg-input" type="password" placeholder="密码" autocomplete="current-password" />
+      <button id="lg-btn" class="btn btn-primary lg-btn">登录</button>
+      <div id="lg-error" class="lg-error"></div>
+      <div class="lg-hint">管理员账号由系统初始化；查看账号由管理员在「账号管理」中添加。</div>
+    </div>
+  </div>
+
   <header class="site-header">
     <div class="wrap">
       <div class="brand-row">
@@ -19,9 +33,12 @@
           </div>
         </div>
         <div class="header-actions">
-          <button id="edit-toggle" class="ghost-btn" title="进入编辑模式，可直接增删改内容">✏️ 编辑模式</button>
+          <button id="edit-toggle" class="ghost-btn" title="进入编辑模式，可直接上传与增删改内容" style="display:none">✏️ 编辑模式</button>
+          <button id="user-mgmt-btn" class="ghost-btn" title="管理可登录查看的账号" style="display:none">👥 账号管理</button>
           <button id="fav-toggle" class="ghost-btn" title="只看我收藏的内容">♡ 我的收藏 <b id="fav-count">0</b></button>
           <button id="share-btn" class="ghost-btn" title="复制当前筛选条件的链接">🔗 分享筛选</button>
+          <span id="user-box" class="user-box" style="display:none"></span>
+          <button id="logout-btn" class="ghost-btn" style="display:none">退出</button>
         </div>
       </div>
 
@@ -194,8 +211,19 @@
         </div>
 
         <div class="field">
-          <label>相关链接<span class="hint">视频 / 原文地址，可留空</span></label>
-          <input id="ed-video" type="text" placeholder="https://…" />
+          <label>视频文件<span class="hint">可选，支持 mp4 / webm 等（与下方链接二选一）</span></label>
+          <div class="cover-row">
+            <div class="cover-prev" id="ed-video-prev">🎬</div>
+            <div class="cover-ctrl">
+              <div class="cover-btns">
+                <button type="button" class="btn" id="ed-video-pick">选择本地视频</button>
+                <button type="button" class="btn" id="ed-video-clear">移除视频</button>
+              </div>
+              <input id="ed-video-file" type="file" accept="video/*" hidden />
+              <div class="hint" id="ed-video-hint">未选择视频文件</div>
+            </div>
+          </div>
+          <input id="ed-video" type="text" placeholder="或粘贴视频链接 https://…（已上传文件则留空）" style="margin-top:10px" />
         </div>
 
         <div class="ed-error" id="ed-error"></div>
@@ -205,6 +233,34 @@
           <span class="eb-grow"></span>
           <button class="btn danger" id="ed-delete" style="display:none;">删除这条</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 账号管理（仅管理员） -->
+  <div class="modal-mask" id="usermodal">
+    <div class="modal editor">
+      <div class="ed-head">
+        <h3>账号管理（查看权限）</h3>
+        <button class="ed-x" id="um-close" title="关闭">×</button>
+      </div>
+      <div class="ed-body">
+        <div class="um-add">
+          <input id="um-user" placeholder="新查看账号（中英文 / 数字，2-20 位）" />
+          <input id="um-pass" type="password" placeholder="密码（≥4 位）" />
+          <button class="btn btn-primary" id="um-add">＋ 添加查看账号</button>
+        </div>
+        <div id="um-list" class="um-list"></div>
+        <hr class="um-sep" />
+        <div class="um-pw">
+          <h4>修改管理员密码</h4>
+          <div class="um-add">
+            <input id="um-old" type="password" placeholder="原密码" />
+            <input id="um-new" type="password" placeholder="新密码（≥4 位）" />
+            <button class="btn" id="um-change">保存新密码</button>
+          </div>
+        </div>
+        <div id="um-error" class="ed-error"></div>
       </div>
     </div>
   </div>
