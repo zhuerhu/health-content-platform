@@ -210,7 +210,7 @@ select.filter-select:focus { border-color: var(--green); background: #fff; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 18px; }
 .grid.list { grid-template-columns: 1fr; }
 .grid.list .card { flex-direction: row; }
-.grid.list .card .cover { width: 208px; height: auto; min-height: 132px; flex-shrink: 0; }
+.grid.list .card .cover { width: 208px; height: 132px; min-height: 0; aspect-ratio: auto; flex-shrink: 0; }
 .grid.list .card .summary { -webkit-line-clamp: 2; }
 
 .card {
@@ -220,7 +220,7 @@ select.filter-select:focus { border-color: var(--green); background: #fff; }
 }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .card:hover { transform: translateY(-5px); box-shadow: var(--shadow-l); border-color: #d9e7df; }
-.card .cover { height: 132px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 42px; position: relative; overflow: hidden; }
+.card .cover { aspect-ratio: 1 / 1; height: auto; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 42px; position: relative; overflow: hidden; }
 .card .cover .cat-badge {
   position: absolute; top: 10px; left: 10px; background: rgba(16, 32, 24, .38); color: #fff;
   font-size: 11.5px; padding: 3px 10px; border-radius: 999px; backdrop-filter: blur(4px);
