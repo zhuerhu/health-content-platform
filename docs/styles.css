@@ -48,7 +48,7 @@ button { font-family: inherit; }
   content: ""; position: absolute; inset: 0;
   background:
     linear-gradient(180deg, rgba(7,26,17,.34) 0%, rgba(7,26,17,0) 46%),
-    linear-gradient(90deg, rgba(7,26,17,.95) 0%, rgba(7,26,17,.87) 30%, rgba(7,26,17,.66) 55%, rgba(7,26,17,.26) 80%, rgba(7,26,17,.04) 100%);
+    linear-gradient(90deg, rgba(7,26,17,.97) 0%, rgba(7,26,17,.95) 42%, rgba(7,26,17,.76) 60%, rgba(7,26,17,.36) 80%, rgba(7,26,17,.05) 100%);
   pointer-events: none;
 }
 .site-header .wrap { position: relative; max-width: 1180px; margin: 0 auto; }
