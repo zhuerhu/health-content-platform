@@ -60,6 +60,7 @@
       <span class="eb-tag">✏️ 管理</span>
       <span class="eb-state" id="ed-state"></span>
       <span class="eb-grow"></span>
+      <button class="btn" id="btn-tags" title="添加自定义标签">🏷 标签管理</button>
       <button class="btn btn-primary" id="btn-new">＋ 新建内容</button>
     </div>
 
@@ -227,6 +228,35 @@
       <div class="lg-hint">
         获取方式：GitHub → 右上角头像 → Settings → Developer settings → Personal access tokens →
         <b>Tokens (classic)</b> → Generate new token → 勾选 <b>repo</b> → 生成的 <code>ghp_…</code> 粘到这里。
+      </div>
+    </div>
+  </div>
+
+  <!-- 标签管理（自定义标签，仅管理员） -->
+  <div class="modal-mask" id="tagmodal">
+    <div class="modal editor">
+      <div class="ed-head">
+        <h3>标签管理（自定义）</h3>
+        <button class="ed-x" id="tm-close" title="关闭">×</button>
+      </div>
+      <div class="ed-body">
+        <p class="hint" style="margin-top:0">这里添加的标签会出现在筛选区和编辑器里，<b>所有人可见</b>；内置标签不可删除。</p>
+        <div class="field">
+          <label>内容标签</label>
+          <div class="pills" id="tm-disease"></div>
+          <div class="tm-add"><input id="tm-in-disease" placeholder="输入新标签，回车或点「添加」" /><button class="btn" data-add="disease">＋ 添加</button></div>
+        </div>
+        <div class="field">
+          <label>内容形态</label>
+          <div class="pills" id="tm-format"></div>
+          <div class="tm-add"><input id="tm-in-format" placeholder="输入新标签，回车或点「添加」" /><button class="btn" data-add="format">＋ 添加</button></div>
+        </div>
+        <div class="field">
+          <label>用户旅程 / 内容深度</label>
+          <div class="pills" id="tm-journey"></div>
+          <div class="tm-add"><input id="tm-in-journey" placeholder="输入新标签，回车或点「添加」" /><button class="btn" data-add="journey">＋ 添加</button></div>
+        </div>
+        <div class="ed-error" id="tm-error"></div>
       </div>
     </div>
   </div>
