@@ -22,8 +22,19 @@ const OWNER = 'zhuerhu';
 const REPO = 'health-content-platform';
 const BRANCH = 'main';
 const DATA_PATH = 'docs/data/content.json';
+const TAGS_PATH = 'docs/data/tags.json';
 const MEDIA_DIR = 'docs/media';
 const API = 'https://api.github.com';
+
+/* 内置标签快照 + 自定义标签（存在仓库 data/tags.json，全员可见） */
+const BUILTIN = { disease: CONFIG.DISEASE_TAGS.slice(), format: CONFIG.FORMAT_TAGS.slice(), journey: CONFIG.JOURNEY_TAGS.slice() };
+let CUSTOM = { disease: [], format: [], journey: [] };
+function uniq(a) { return [...new Set(a)]; }
+function applyTags() {
+  CONFIG.DISEASE_TAGS = uniq([...BUILTIN.disease, ...CUSTOM.disease]);
+  CONFIG.FORMAT_TAGS = uniq([...BUILTIN.format, ...CUSTOM.format]);
+  CONFIG.JOURNEY_TAGS = uniq([...BUILTIN.journey, ...CUSTOM.journey]);
+}
 
 const TOKEN_KEY = 'hcp_gh_token_v1';
 let TOKEN = localStorage.getItem(TOKEN_KEY) || '';
@@ -131,6 +142,74 @@ async function reload() {
   applyState();
   renderEditbar();
   return ALL_ITEMS.length;
+}
+
+/* ---------------- 自定义标签（存于仓库 data/tags.json） ---------------- */
+function arr(v) { return Array.isArray(v) ? v.map(String).map(s => s.trim()).filter(Boolean) : []; }
+async function loadTags() {
+  try {
+    const r = await fetch('data/tags.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const d = await r.json();
+    CUSTOM = { disease: arr(d.disease), format: arr(d.format), journey: arr(d.journey) };
+  } catch (e) { /* 首次还没有 tags.json，忽略 */ }
+}
+async function saveTags() {
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(CUSTOM, null, 2))));
+  await putRepoFile(TAGS_PATH, b64, 'update tags');
+}
+function openTagModal() {
+  el('tagmodal').classList.add('open'); document.body.style.overflow = 'hidden';
+  el('tm-error').textContent = ''; renderTagModal();
+}
+function closeTagModal() {
+  el('tagmodal').classList.remove('open');
+  if (!el('editor').classList.contains('open') && !el('modal').classList.contains('open')) document.body.style.overflow = '';
+}
+function renderTagModal() {
+  ['disease', 'format', 'journey'].forEach(dim => {
+    const box = el('tm-' + dim); box.innerHTML = '';
+    if (!CUSTOM[dim].length) { box.innerHTML = '<span class="hint">暂无自定义标签</span>'; return; }
+    CUSTOM[dim].forEach(t => {
+      const s = document.createElement('span');
+      s.className = 'pill active tm-chip';
+      s.innerHTML = escapeHtml(t) + '<span class="tm-x" title="删除此标签">×</span>';
+      s.querySelector('.tm-x').onclick = () => removeTag(dim, t);
+      box.appendChild(s);
+    });
+  });
+}
+function afterTagsChanged() {
+  applyTags();
+  renderTagModal();
+  buildPills();
+  if (el('editor').classList.contains('open')) {
+    buildCheckGrid('ed-disease', CONFIG.DISEASE_TAGS, 'disease');
+    buildCheckGrid('ed-format', CONFIG.FORMAT_TAGS, 'format');
+    buildCheckGrid('ed-journey', CONFIG.JOURNEY_TAGS, 'journey');
+  }
+}
+async function addTag(dim, raw) {
+  const name = String(raw || '').trim();
+  el('tm-error').textContent = '';
+  if (!name) return false;
+  if (!ME) { el('tm-error').textContent = '请先登录管理员'; return false; }
+  if (name.length > 12) { el('tm-error').textContent = '标签建议不超过 12 个字'; return false; }
+  if (BUILTIN[dim].includes(name) || CUSTOM[dim].includes(name)) { el('tm-error').textContent = '该标签已存在'; return false; }
+  CUSTOM[dim] = CUSTOM[dim].concat([name]);
+  try { await saveTags(); } catch (e) { CUSTOM[dim] = CUSTOM[dim].filter(x => x !== name); el('tm-error').textContent = '保存失败：' + (e.message || e); return false; }
+  afterTagsChanged();
+  toast('已添加标签「' + name + '」（约 1 分钟后全员可见）');
+  return true;
+}
+async function removeTag(dim, name) {
+  el('tm-error').textContent = '';
+  if (!ME) { el('tm-error').textContent = '请先登录管理员'; return; }
+  const backup = CUSTOM[dim].slice();
+  CUSTOM[dim] = CUSTOM[dim].filter(x => x !== name);
+  try { await saveTags(); } catch (e) { CUSTOM[dim] = backup; el('tm-error').textContent = '保存失败：' + (e.message || e); return; }
+  afterTagsChanged();
+  toast('已删除标签「' + name + '」');
 }
 
 /* ---------------- URL ⇄ 状态 ---------------- */
@@ -612,6 +691,18 @@ function bindEvents() {
   el('edit-toggle').addEventListener('click', () => setEditing(!state.editing));
   el('btn-new').addEventListener('click', () => openEditor(null));
 
+  /* ---------- 标签管理 ---------- */
+  el('btn-tags').addEventListener('click', openTagModal);
+  el('tm-close').addEventListener('click', closeTagModal);
+  el('tagmodal').addEventListener('click', e => { if (e.target === el('tagmodal')) closeTagModal(); });
+  document.querySelectorAll('#tagmodal [data-add]').forEach(b => {
+    const dim = b.dataset.add;
+    b.addEventListener('click', async () => { const inp = el('tm-in-' + dim); if (await addTag(dim, inp.value)) inp.value = ''; });
+  });
+  ['disease', 'format', 'journey'].forEach(dim => {
+    el('tm-in-' + dim).addEventListener('keydown', async e => { if (e.key === 'Enter') { e.preventDefault(); if (await addTag(dim, e.target.value)) e.target.value = ''; } });
+  });
+
   el('ed-close').addEventListener('click', closeEditor);
   el('ed-cancel').addEventListener('click', closeEditor);
   el('ed-save').addEventListener('click', saveEditor);
@@ -662,6 +753,8 @@ function bindEvents() {
 /* ---------------- 启动 ---------------- */
 async function init() {
   readUrl();
+  await loadTags();
+  applyTags();
   ALL_ITEMS = await loadContent();
   ALL_ITEMS.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
   el('category').innerHTML = '<option value="">全部分类</option>';
