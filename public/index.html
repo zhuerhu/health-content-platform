@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="健康内容中台 · 内容广场：按分类与四维标签筛选健康内容，支持收藏与筛选结果分享。" />
+  <title>健康内容中台 · 内容广场</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand-row">
+        <div class="brand">
+          <span class="logo">🌿</span>
+          <div>
+            <h1>健康内容中台</h1>
+            <p>内容生产 → 标签化管理 → 千人千面分发</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="fav-toggle" class="ghost-btn" title="只看我收藏的内容">♡ 我的收藏 <b id="fav-count">0</b></button>
+          <button id="share-btn" class="ghost-btn" title="复制当前筛选条件的链接">🔗 分享筛选</button>
+          <a href="admin.html" class="ghost-btn" title="进入后台录入素材">⚙ 后台素材管理</a>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h2>按标签，找到<em>刚刚好</em>的健康内容</h2>
+        <p>6 大内容库 · 四维标签体系（内容标签 / 内容形态 / 用户旅程 / 细分主题），覆盖从认知层到深化层的完整链路。</p>
+        <div class="stats" id="stats"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- 分类快捷入口 -->
+    <section class="cats" id="cats"></section>
+
+    <!-- 吸顶工具栏 -->
+    <div class="toolbar" id="toolbar">
+      <div class="search-box">
+        <span class="ic">🔍</span>
+        <input id="search" type="text" placeholder="搜索标题、摘要、正文或标签…" />
+        <span class="kbd">/</span>
+      </div>
+      <select id="category" class="filter-select">
+        <option value="">全部分类</option>
+      </select>
+      <select id="sort" class="filter-select">
+        <option value="new">最新优先</option>
+        <option value="old">最早优先</option>
+        <option value="title">按标题排序</option>
+      </select>
+      <button id="reset" class="btn">重置筛选</button>
+    </div>
+
+    <!-- 标签筛选区 -->
+    <section class="filters">
+      <div class="filter-group">
+        <div class="label"><b>细分主题</b><span class="tip">（按所选分类自动对应子分类；同组为"或"）</span></div>
+        <div class="pills" id="subtopic-pills"></div>
+      </div>
+      <div class="filter-group">
+        <div class="label"><b>内容标签</b><span class="tip">（可多选，同组为"或"）</span></div>
+        <div class="pills" id="disease-pills"></div>
+      </div>
+      <div class="filter-group">
+        <div class="label"><b>内容形态</b><span class="tip">（可多选）</span></div>
+        <div class="pills" id="format-pills"></div>
+      </div>
+      <div class="filter-group">
+        <div class="label"><b>用户旅程 / 内容深度</b><span class="tip">（认知层 → 行动层 → 深化层）</span></div>
+        <div class="pills" id="journey-pills"></div>
+      </div>
+    </section>
+
+    <!-- 已选条件 -->
+    <div class="active-bar" id="active-bar"></div>
+
+    <div class="result-bar">
+      <div class="count">共 <b id="total">0</b> 条内容<span id="range" class="tip"></span></div>
+      <div class="ops">
+        <div class="seg">
+          <button data-view="grid" class="on" title="网格视图">▦ 网格</button>
+          <button data-view="list" title="列表视图">☰ 列表</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none;">
+      <span class="ic">🍃</span>
+      <div class="t">没有符合条件的内容</div>
+      <div class="s">试试放宽筛选条件，或者<a href="#" id="empty-reset" style="color:var(--green-dark);text-decoration:underline;">重置全部筛选</a>。</div>
+    </div>
+  </div>
+
+  <!-- 返回顶部 -->
+  <button class="to-top" id="to-top" title="返回顶部">↑</button>
+
+  <!-- 详情弹窗 -->
+  <div class="modal-mask" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <button id="modal-fav" class="fav" title="收藏">♡</button>
+        <button id="modal-close" title="关闭（Esc）">×</button>
+      </div>
+      <div class="m-cover" id="m-cover">🌿</div>
+      <div class="m-body">
+        <h2 class="m-title" id="m-title"></h2>
+        <div class="m-time" id="m-time"></div>
+        <div class="m-meta" id="m-meta"></div>
+        <div class="m-text" id="m-text"></div>
+        <div class="m-video" id="m-video"></div>
+        <div class="related" id="m-related" style="display:none;">
+          <h4>🔗 相关推荐</h4>
+          <div class="related-list" id="m-related-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

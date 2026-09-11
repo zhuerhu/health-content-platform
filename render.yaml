@@ -1,0 +1,21 @@
+# Render 部署描述文件（在 Render 控制台「New」→「Blueprint」选择本仓库即可一键创建）
+services:
+  - type: web
+    name: health-content-platform
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: "3000"
+      - key: DATA_DIR
+        value: "/var/data"
+      - key: UPLOAD_DIR
+        value: "/var/data/uploads"
+    disks:
+      - name: content-data
+        mountPath: /var/data
+        sizeGB: 1

@@ -1,0 +1,6 @@
+node_modules/
+npm-debug.log*
+*.log
+.workbuddy/
+.DS_Store
+uploads_tmp/
