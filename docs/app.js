@@ -8,9 +8,9 @@
 /* ---------------- 配置 ---------------- */
 const CONFIG = {
   CATEGORIES: ['膳食营养库', '慢病管理库', '生活实操库', '辟谣真相库', '专家答疑库', '健康陪伴库'],
+  PRODUCT_TAGS: ['纾糖', '骨能', '心活', '倍畅', '金装中老年', '红参'],
   DISEASE_TAGS: ['高血压', '糖尿病', '高血脂', '骨质疏松', '慢阻肺', '普通健康', '食材红黑榜', '三餐搭配', '替代品认知', '食疗调理', '一周食谱', '慢病常识', '生活方式', '监测记录', '并发症预防', '用药尝试', '买菜指南', '下厨实操', '运动处方', '自测工具', '食疗误区', '保健品陷阱', '偏方核查', '代糖代盐真相', '一问一答', '直播回放', '误区纠正', '节气养生', '会员故事', '健康周报'],
   FORMAT_TAGS: ['图文', '短视频', '长视频', '音频答疑', '直播回放', '打卡任务', '自测工具'],
-  JOURNEY_TAGS: ['认知层', '行动层', '深化层'],
   CATEGORY_COLOR: {
     '膳食营养库': '#2e9e5b', '慢病管理库': '#e8633a', '生活实操库': '#2f8fd6',
     '辟谣真相库': '#c0392b', '专家答疑库': '#8e44ad', '健康陪伴库': '#d4a017'
@@ -27,13 +27,13 @@ const MEDIA_DIR = 'docs/media';
 const API = 'https://api.github.com';
 
 /* 内置标签快照 + 自定义标签（存在仓库 data/tags.json，全员可见） */
-const BUILTIN = { disease: CONFIG.DISEASE_TAGS.slice(), format: CONFIG.FORMAT_TAGS.slice(), journey: CONFIG.JOURNEY_TAGS.slice() };
-let CUSTOM = { disease: [], format: [], journey: [] };
+const BUILTIN = { product: CONFIG.PRODUCT_TAGS.slice(), disease: CONFIG.DISEASE_TAGS.slice(), format: CONFIG.FORMAT_TAGS.slice() };
+let CUSTOM = { product: [], disease: [], format: [] };
 function uniq(a) { return [...new Set(a)]; }
 function applyTags() {
+  CONFIG.PRODUCT_TAGS = uniq([...BUILTIN.product, ...CUSTOM.product]);
   CONFIG.DISEASE_TAGS = uniq([...BUILTIN.disease, ...CUSTOM.disease]);
   CONFIG.FORMAT_TAGS = uniq([...BUILTIN.format, ...CUSTOM.format]);
-  CONFIG.JOURNEY_TAGS = uniq([...BUILTIN.journey, ...CUSTOM.journey]);
 }
 
 const TOKEN_KEY = 'hcp_gh_token_v1';
@@ -47,12 +47,12 @@ const el = id => document.getElementById(id);
 const ICONS = { '膳食营养库': '🥗', '慢病管理库': '❤️', '生活实操库': '🍳', '辟谣真相库': '🔍', '专家答疑库': '💬', '健康陪伴库': '🤝' };
 const FAV_KEY = 'hcp_online_fav_v1';
 const SORT_LABEL = { new: '最新优先', old: '最早优先', title: '按标题排序', fav: '收藏最多优先', favAsc: '收藏最少优先' };
-const DIM_LABEL = { disease: '内容标签', format: '内容形态', journey: '内容深度' };
-const P = { category: 'cat', disease: 'dis', format: 'fmt', journey: 'jrn', q: 'q', sort: 'sort', fav: 'fav', view: 'view' };
-const SET_DIMS = ['disease', 'format', 'journey'];
+const DIM_LABEL = { product: '产品标签', disease: '内容标签', format: '内容形态' };
+const P = { category: 'cat', product: 'prd', disease: 'dis', format: 'fmt', q: 'q', sort: 'sort', fav: 'fav', view: 'view' };
+const SET_DIMS = ['product', 'disease', 'format'];
 
 const state = {
-  disease: new Set(), format: new Set(), journey: new Set(),
+  product: new Set(), disease: new Set(), format: new Set(),
   category: '', q: '', sort: 'new', favOnly: false, view: 'grid', editing: false
 };
 let favorites = new Set(readFavs());
@@ -162,7 +162,7 @@ async function loadTags() {
     const r = await fetch('data/tags.json?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     const d = await r.json();
-    CUSTOM = { disease: arr(d.disease), format: arr(d.format), journey: arr(d.journey) };
+    CUSTOM = { product: arr(d.product), disease: arr(d.disease), format: arr(d.format) };
   } catch (e) { /* 首次还没有 tags.json，忽略 */ }
 }
 async function saveTags() {
@@ -178,7 +178,7 @@ function closeTagModal() {
   if (!el('editor').classList.contains('open') && !el('modal').classList.contains('open')) document.body.style.overflow = '';
 }
 function renderTagModal() {
-  ['disease', 'format', 'journey'].forEach(dim => {
+  ['product', 'disease', 'format'].forEach(dim => {
     const box = el('tm-' + dim); box.innerHTML = '';
     if (!CUSTOM[dim].length) { box.innerHTML = '<span class="hint">暂无自定义标签</span>'; return; }
     CUSTOM[dim].forEach(t => {
@@ -195,9 +195,9 @@ function afterTagsChanged() {
   renderTagModal();
   buildPills();
   if (el('editor').classList.contains('open')) {
+    buildCheckGrid('ed-product', CONFIG.PRODUCT_TAGS, 'product');
     buildCheckGrid('ed-disease', CONFIG.DISEASE_TAGS, 'disease');
     buildCheckGrid('ed-format', CONFIG.FORMAT_TAGS, 'format');
-    buildCheckGrid('ed-journey', CONFIG.JOURNEY_TAGS, 'journey');
   }
 }
 async function addTag(dim, raw) {
@@ -254,11 +254,11 @@ function filterItems() {
   if (state.category) items = items.filter(it => it.category === state.category);
   if (state.disease.size) items = items.filter(it => [...state.disease].some(t => (it.diseaseTags || []).includes(t)));
   if (state.format.size) items = items.filter(it => [...state.format].some(t => (it.formatTags || []).includes(t)));
-  if (state.journey.size) items = items.filter(it => [...state.journey].some(t => (it.journeyTags || []).includes(t)));
+  if (state.product.size) items = items.filter(it => [...state.product].some(t => (it.productTags || []).includes(t)));
   if (state.q) {
     const kw = state.q.toLowerCase();
     items = items.filter(it => [it.title, it.summary, it.body, it.category]
-      .concat(it.diseaseTags || [], it.formatTags || [], it.journeyTags || []).join(' ').toLowerCase().includes(kw));
+      .concat(it.productTags || [], it.diseaseTags || [], it.formatTags || []).join(' ').toLowerCase().includes(kw));
   }
   const byDate = (a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
   const newestFirst = (a, b) => byDate(b, a);
@@ -272,7 +272,7 @@ function filterItems() {
 
 /* ---------------- 渲染 ---------------- */
 function renderStats() {
-  const tagCount = (CONFIG.DISEASE_TAGS || []).length + (CONFIG.FORMAT_TAGS || []).length + (CONFIG.JOURNEY_TAGS || []).length;
+  const tagCount = (CONFIG.PRODUCT_TAGS || []).length + (CONFIG.DISEASE_TAGS || []).length + (CONFIG.FORMAT_TAGS || []).length;
   const data = [{ n: ALL_ITEMS.length, k: '条内容' }, { n: (CONFIG.CATEGORIES || []).length, k: '大内容库' }, { n: tagCount, k: '个标签' }];
   el('stats').innerHTML = data.map(s => `<div class="stat"><div class="n">${s.n}</div><div class="k">${s.k}</div></div>`).join('');
 }
@@ -301,7 +301,7 @@ function buildPills() {
   };
   fill('disease-pills', CONFIG.DISEASE_TAGS, 'disease');
   fill('format-pills', CONFIG.FORMAT_TAGS, 'format');
-  fill('journey-pills', CONFIG.JOURNEY_TAGS, 'journey');
+  fill('product-pills', CONFIG.PRODUCT_TAGS, 'product');
 }
 function renderActive() {
   const bar = el('active-bar'); const chips = [];
@@ -342,7 +342,7 @@ function renderList(items) {
       <div class="body">
         <h3 class="title">${hl(it.title, kw)}</h3>
         <p class="summary">${hl(it.summary || '', kw)}</p>
-        <div class="tags">${tagHtml(it.diseaseTags)}${tagHtml(it.formatTags)}${tagHtml(it.journeyTags)}</div>
+        <div class="tags">${tagHtml(it.productTags, 'product')}${tagHtml(it.diseaseTags)}${tagHtml(it.formatTags)}</div>
         ${(state.editing && ME) ? `<div class="foot ops">
           <button class="mini" data-act="edit">✎ 编辑</button>
           <button class="mini" data-act="dup">⧉ 复制</button>
@@ -376,8 +376,8 @@ function renderList(items) {
     grid.appendChild(card);
   });
 }
-function tagHtml(arr) {
-  return (arr || []).map(t => `<span class="tag disease">${escapeHtml(t)}</span>`).join('');
+function tagHtml(arr, cls) {
+  return (arr || []).map(t => `<span class="tag ${cls || 'disease'}">${escapeHtml(t)}</span>`).join('');
 }
 
 /* ---------------- 主流程 ---------------- */
@@ -419,8 +419,8 @@ function openDetail(it) {
   el('m-time').innerHTML = `<span>${cAt}${uAt && uAt !== cAt ? ' · 更新于 ' + uAt : ''}</span>` +
     `<span class="m-fav" id="m-favcount" title="内容自带收藏数 + 你的收藏">♡ 收藏量 <b>${favCountOf(it)}</b></span>`;
   const meta = el('m-meta');
-  const tags = [].concat([{ t: it.category, dim: 'category' }], (it.diseaseTags || []).map(t => ({ t, dim: 'disease' })), (it.formatTags || []).map(t => ({ t, dim: 'format' })), (it.journeyTags || []).map(t => ({ t, dim: 'journey' })));
-  meta.innerHTML = tags.map(x => `<span class="tag format" data-dim="${x.dim}" data-val="${escapeHtml(x.t)}">${escapeHtml(x.t)}</span>`).join('');
+  const tags = [].concat([{ t: it.category, dim: 'category' }], (it.productTags || []).map(t => ({ t, dim: 'product' })), (it.diseaseTags || []).map(t => ({ t, dim: 'disease' })), (it.formatTags || []).map(t => ({ t, dim: 'format' })));
+  meta.innerHTML = tags.map(x => `<span class="tag ${x.dim === 'product' ? 'product' : 'format'}" data-dim="${x.dim}" data-val="${escapeHtml(x.t)}">${escapeHtml(x.t)}</span>`).join('');
   meta.querySelectorAll('.tag').forEach(node => {
     node.onclick = () => {
       const dim = node.dataset.dim, val = node.dataset.val;
@@ -439,7 +439,7 @@ function openDetail(it) {
   } else el('m-video').innerHTML = '';
   const scored = ALL_ITEMS.filter(x => x.id !== it.id).map(x => {
     let s = x.category === it.category ? 2 : 0;
-    ['diseaseTags', 'formatTags', 'journeyTags'].forEach(k => { s += (x[k] || []).filter(t => (it[k] || []).includes(t)).length; });
+    ['productTags', 'diseaseTags', 'formatTags'].forEach(k => { s += (x[k] || []).filter(t => (it[k] || []).includes(t)).length; });
     return { x, s };
   }).filter(o => o.s > 0).sort((a, b) => b.s - a.s).slice(0, 3);
   const relBox = el('m-related');
@@ -471,10 +471,10 @@ function renderEditbar() {
 }
 
 function openEditor(it) {
-  const blank = { id: '', title: '', category: (CONFIG.CATEGORIES || [])[0] || '', diseaseTags: [], formatTags: [], journeyTags: [], summary: '', body: '', cover: '', video: '', videoUrl: '', favCount: 0, createdAt: new Date().toISOString() };
+  const blank = { id: '', title: '', category: (CONFIG.CATEGORIES || [])[0] || '', productTags: [], diseaseTags: [], formatTags: [], summary: '', body: '', cover: '', video: '', videoUrl: '', favCount: 0, createdAt: new Date().toISOString() };
   const d = it || blank;
   editingId = it ? it.id : null;
-  draftSel = { disease: new Set(d.diseaseTags || []), format: new Set(d.formatTags || []), journey: new Set(d.journeyTags || []) };
+  draftSel = { product: new Set(d.productTags || []), disease: new Set(d.diseaseTags || []), format: new Set(d.formatTags || []) };
   draftCover = d.cover || ''; coverFileObj = null; videoFileObj = null;
   el('ed-head-title').textContent = it ? '编辑内容' : '新建内容';
   const sel = el('ed-category');
@@ -489,9 +489,9 @@ function openEditor(it) {
   el('ed-cover-url').value = /^https?:/i.test(d.cover || '') ? d.cover : '';
   el('ed-delete').style.display = it ? '' : 'none';
   el('ed-error').textContent = '';
+  buildCheckGrid('ed-product', CONFIG.PRODUCT_TAGS, 'product');
   buildCheckGrid('ed-disease', CONFIG.DISEASE_TAGS, 'disease');
   buildCheckGrid('ed-format', CONFIG.FORMAT_TAGS, 'format');
-  buildCheckGrid('ed-journey', CONFIG.JOURNEY_TAGS, 'journey');
   renderCoverPreview(); renderVideoPreview();
   el('editor').classList.add('open'); document.body.style.overflow = 'hidden';
   el('editor').querySelector('.modal').scrollTop = 0;
@@ -558,7 +558,7 @@ async function saveEditor() {
   const item = Object.assign({}, existing || {});
   item.id = editingId || newId();
   item.title = title; item.category = category;
-  item.diseaseTags = [...draftSel.disease]; item.formatTags = [...draftSel.format]; item.journeyTags = [...draftSel.journey];
+  item.productTags = [...draftSel.product]; item.diseaseTags = [...draftSel.disease]; item.formatTags = [...draftSel.format];
   item.summary = el('ed-summary').value.trim(); item.body = el('ed-body').value;
   if (isNaN(dt)) { if (!existing) item.createdAt = new Date().toISOString(); } else item.createdAt = dt.toISOString();
   item.updatedAt = new Date().toISOString();
@@ -732,7 +732,7 @@ function bindEvents() {
     const dim = b.dataset.add;
     b.addEventListener('click', async () => { const inp = el('tm-in-' + dim); if (await addTag(dim, inp.value)) inp.value = ''; });
   });
-  ['disease', 'format', 'journey'].forEach(dim => {
+  ['product', 'disease', 'format'].forEach(dim => {
     el('tm-in-' + dim).addEventListener('keydown', async e => { if (e.key === 'Enter') { e.preventDefault(); if (await addTag(dim, e.target.value)) e.target.value = ''; } });
   });
 
