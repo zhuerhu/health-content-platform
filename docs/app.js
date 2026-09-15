@@ -46,7 +46,7 @@ let current = [];
 const el = id => document.getElementById(id);
 const ICONS = { '膳食营养库': '🥗', '慢病管理库': '❤️', '生活实操库': '🍳', '辟谣真相库': '🔍', '专家答疑库': '💬', '健康陪伴库': '🤝' };
 const FAV_KEY = 'hcp_online_fav_v1';
-const SORT_LABEL = { new: '最新优先', old: '最早优先', title: '按标题排序' };
+const SORT_LABEL = { new: '最新优先', old: '最早优先', title: '按标题排序', fav: '收藏最多优先', favAsc: '收藏最少优先' };
 const DIM_LABEL = { disease: '内容标签', format: '内容形态', journey: '内容深度' };
 const P = { category: 'cat', disease: 'dis', format: 'fmt', journey: 'jrn', q: 'q', sort: 'sort', fav: 'fav', view: 'view' };
 const SET_DIMS = ['disease', 'format', 'journey'];
@@ -69,6 +69,17 @@ function hl(text, kw) {
 }
 function colorOf(cat) { return (CONFIG.CATEGORY_COLOR && CONFIG.CATEGORY_COLOR[cat]) || '#2e9e5b'; }
 function iconOf(cat) { return ICONS[cat] || '🌿'; }
+
+/* ---------------- 收藏量 ----------------
+ * 收藏量 = 内容自带的 favCount（管理员在编辑器里填，存于仓库，全员可见）
+ *        + 本机是否已收藏（收藏 +1，取消收藏 -1，所以自己的收藏也算一票）
+ * 这样即使没有人分享真实数量，点 ♡ 也能立刻看到数字变化、排序立刻生效。
+ */
+function favCountOf(it) {
+  const base = Math.max(0, parseInt(it && it.favCount, 10) || 0);
+  return base + (favorites.has(it.id) ? 1 : 0);
+}
+function isFavSort() { return state.sort === 'fav' || state.sort === 'favAsc'; }
 function fmtDate(s) {
   if (!s) return '';
   const d = new Date(s); if (isNaN(d)) return '';
@@ -250,9 +261,12 @@ function filterItems() {
       .concat(it.diseaseTags || [], it.formatTags || [], it.journeyTags || []).join(' ').toLowerCase().includes(kw));
   }
   const byDate = (a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+  const newestFirst = (a, b) => byDate(b, a);
   if (state.sort === 'old') items.sort(byDate);
   else if (state.sort === 'title') items.sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'zh-Hans-CN'));
-  else items.sort((a, b) => byDate(b, a));
+  else if (state.sort === 'fav') items.sort((a, b) => favCountOf(b) - favCountOf(a) || newestFirst(a, b));
+  else if (state.sort === 'favAsc') items.sort((a, b) => favCountOf(a) - favCountOf(b) || newestFirst(a, b));
+  else items.sort(newestFirst);
   return items;
 }
 
@@ -320,6 +334,7 @@ function renderList(items) {
       <div class="cover" style="${coverStyle}">
         ${it.cover ? '' : `<span>${iconOf(it.category)}</span>`}
         <span class="cat-badge">${escapeHtml(it.category)}</span>
+        <span class="fav-n${favorites.has(it.id) ? ' on' : ''}" title="收藏量（内容自带收藏数 + 你的收藏）">♡ ${favCountOf(it)}</span>
         <button class="fav${favorites.has(it.id) ? ' on' : ''}" title="收藏">${favorites.has(it.id) ? '♥' : '♡'}</button>
         ${(it.formatTags && it.formatTags[0]) ? `<span class="idx">${escapeHtml(it.formatTags[0])}</span>` : ''}
         ${(it.video || it.videoUrl) ? `<span class="idx" style="right:auto;left:11px;bottom:9px">▶ 视频</span>` : ''}
@@ -338,7 +353,13 @@ function renderList(items) {
       e.stopPropagation();
       const on = toggleFav(it.id);
       e.currentTarget.classList.toggle('on', on); e.currentTarget.textContent = on ? '♥' : '♡';
-      updateFavBadge(); if (state.favOnly) applyState(); else toast(on ? '已加入收藏' : '已取消收藏');
+      updateFavBadge();
+      if (state.favOnly || isFavSort()) applyState();
+      else {
+        const n = card.querySelector('.fav-n');
+        if (n) { n.textContent = '♡ ' + favCountOf(it); n.classList.toggle('on', on); }
+      }
+      toast(on ? '已加入收藏' : '已取消收藏');
     };
     card.onclick = () => openDetail(it);
     if (state.editing && ME) {
@@ -395,7 +416,8 @@ function openDetail(it) {
   cover.innerHTML = `${it.cover ? '' : `<span>${iconOf(it.category)}</span>`}<span class="m-cat">${escapeHtml(it.category)}</span>`;
   el('m-title').textContent = it.title || '(无标题)';
   const cAt = fmtDate(it.createdAt), uAt = fmtDate(it.updatedAt);
-  el('m-time').textContent = `${cAt}${uAt && uAt !== cAt ? ' · 更新于 ' + uAt : ''}`;
+  el('m-time').innerHTML = `<span>${cAt}${uAt && uAt !== cAt ? ' · 更新于 ' + uAt : ''}</span>` +
+    `<span class="m-fav" id="m-favcount" title="内容自带收藏数 + 你的收藏">♡ 收藏量 <b>${favCountOf(it)}</b></span>`;
   const meta = el('m-meta');
   const tags = [].concat([{ t: it.category, dim: 'category' }], (it.diseaseTags || []).map(t => ({ t, dim: 'disease' })), (it.formatTags || []).map(t => ({ t, dim: 'format' })), (it.journeyTags || []).map(t => ({ t, dim: 'journey' })));
   meta.innerHTML = tags.map(x => `<span class="tag format" data-dim="${x.dim}" data-val="${escapeHtml(x.t)}">${escapeHtml(x.t)}</span>`).join('');
@@ -449,7 +471,7 @@ function renderEditbar() {
 }
 
 function openEditor(it) {
-  const blank = { id: '', title: '', category: (CONFIG.CATEGORIES || [])[0] || '', diseaseTags: [], formatTags: [], journeyTags: [], summary: '', body: '', cover: '', video: '', videoUrl: '', createdAt: new Date().toISOString() };
+  const blank = { id: '', title: '', category: (CONFIG.CATEGORIES || [])[0] || '', diseaseTags: [], formatTags: [], journeyTags: [], summary: '', body: '', cover: '', video: '', videoUrl: '', favCount: 0, createdAt: new Date().toISOString() };
   const d = it || blank;
   editingId = it ? it.id : null;
   draftSel = { disease: new Set(d.diseaseTags || []), format: new Set(d.formatTags || []), journey: new Set(d.journeyTags || []) };
@@ -460,6 +482,7 @@ function openEditor(it) {
   sel.value = d.category || (CONFIG.CATEGORIES || [])[0] || '';
   el('ed-title').value = d.title || '';
   el('ed-date').value = toDateInput(d.createdAt);
+  el('ed-fav').value = String(Math.max(0, parseInt(d.favCount, 10) || 0));
   el('ed-summary').value = d.summary || '';
   el('ed-body').value = d.body || '';
   el('ed-video').value = d.videoUrl || '';
@@ -539,6 +562,7 @@ async function saveEditor() {
   item.summary = el('ed-summary').value.trim(); item.body = el('ed-body').value;
   if (isNaN(dt)) { if (!existing) item.createdAt = new Date().toISOString(); } else item.createdAt = dt.toISOString();
   item.updatedAt = new Date().toISOString();
+  item.favCount = Math.max(0, parseInt(el('ed-fav').value, 10) || 0);
 
   const btn = el('ed-save'); btn.disabled = true;
   el('ed-error').textContent = '';
@@ -601,7 +625,7 @@ async function deleteItem(it) {
   } catch (e) { toast('删除失败：' + (e.message || e)); }
 }
 async function duplicateItem(it) {
-  const copy = Object.assign({}, it, { id: newId(), title: (it.title || '') + '（副本）', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  const copy = Object.assign({}, it, { id: newId(), title: (it.title || '') + '（副本）', favCount: 0, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
   try {
     const list = await loadContent(); list.unshift(copy);
     const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(list, null, 2))));
@@ -685,7 +709,16 @@ function bindEvents() {
 
   el('modal-close').addEventListener('click', closeModal);
   el('modal').addEventListener('click', e => { if (e.target === el('modal')) closeModal(); });
-  el('modal-fav').addEventListener('click', e => { if (!modalItem) return; const on = toggleFav(modalItem.id); e.currentTarget.classList.toggle('on', on); e.currentTarget.textContent = on ? '♥' : '♡'; updateFavBadge(); if (state.favOnly) applyState(); else update(); toast(on ? '已加入收藏' : '已取消收藏'); });
+  el('modal-fav').addEventListener('click', e => {
+    if (!modalItem) return;
+    const on = toggleFav(modalItem.id);
+    e.currentTarget.classList.toggle('on', on); e.currentTarget.textContent = on ? '♥' : '♡';
+    updateFavBadge();
+    const fc = el('m-favcount');
+    if (fc) fc.innerHTML = `♡ 收藏量 <b>${favCountOf(modalItem)}</b>`;
+    if (state.favOnly || isFavSort()) applyState(); else update();
+    toast(on ? '已加入收藏' : '已取消收藏');
+  });
   el('modal-edit').addEventListener('click', () => { const it = modalItem; closeModal(); if (it) openEditor(it); });
 
   el('edit-toggle').addEventListener('click', () => setEditing(!state.editing));
