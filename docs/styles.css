@@ -255,9 +255,9 @@ select.filter-select:focus { border-color: var(--green); background: #fff; }
 
 .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.tag.product { background: #fff3d9; color: #9c6b06; }
 .tag.disease { background: #fdecea; color: #c0392b; }
 .tag.format { background: #e8f3ff; color: #2f6fb0; }
-.tag.journey { background: #eafaf0; color: #1f7a43; }
 .tag.subtopic { background: #eef0ff; color: #5b54c9; }
 mark { background: #fff2a8; color: inherit; border-radius: 3px; padding: 0 1px; }
 
