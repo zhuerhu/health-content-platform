@@ -29,7 +29,7 @@
 
       <div class="hero">
         <h2>按标签，找到<em>刚刚好</em>的健康内容</h2>
-        <p>6 大内容库 · 三维标签体系（内容标签 / 内容形态 / 用户旅程）。</p>
+        <p>6 大内容库 · 三维标签体系（产品标签 / 内容标签 / 内容形态）。</p>
         <div class="stats" id="stats"></div>
       </div>
     </div>
@@ -68,16 +68,16 @@
 
     <section class="filters">
       <div class="filter-group">
+        <div class="label"><b>产品标签</b><span class="tip">（按产品系列筛选，可多选，同组为"或"）</span></div>
+        <div class="pills" id="product-pills"></div>
+      </div>
+      <div class="filter-group">
         <div class="label"><b>内容标签</b><span class="tip">（可多选，同组为"或"）</span></div>
         <div class="pills" id="disease-pills"></div>
       </div>
       <div class="filter-group">
         <div class="label"><b>内容形态</b><span class="tip">（可多选）</span></div>
         <div class="pills" id="format-pills"></div>
-      </div>
-      <div class="filter-group">
-        <div class="label"><b>用户旅程 / 内容深度</b><span class="tip">（认知层 → 行动层 → 深化层）</span></div>
-        <div class="pills" id="journey-pills"></div>
       </div>
     </section>
 
@@ -155,16 +155,16 @@
         </div>
 
         <div class="field">
+          <label>产品标签<span class="hint">可多选</span></label>
+          <div class="check-grid" id="ed-product"></div>
+        </div>
+        <div class="field">
           <label>内容标签<span class="hint">可多选</span></label>
           <div class="check-grid" id="ed-disease"></div>
         </div>
         <div class="field">
           <label>内容形态<span class="hint">可多选</span></label>
           <div class="check-grid" id="ed-format"></div>
-        </div>
-        <div class="field">
-          <label>用户旅程 / 内容深度</label>
-          <div class="check-grid" id="ed-journey"></div>
         </div>
 
         <div class="field">
@@ -248,6 +248,11 @@
       <div class="ed-body">
         <p class="hint" style="margin-top:0">这里添加的标签会出现在筛选区和编辑器里，<b>所有人可见</b>；内置标签不可删除。</p>
         <div class="field">
+          <label>产品标签</label>
+          <div class="pills" id="tm-product"></div>
+          <div class="tm-add"><input id="tm-in-product" placeholder="输入新标签，回车或点「添加」" /><button class="btn" data-add="product">＋ 添加</button></div>
+        </div>
+        <div class="field">
           <label>内容标签</label>
           <div class="pills" id="tm-disease"></div>
           <div class="tm-add"><input id="tm-in-disease" placeholder="输入新标签，回车或点「添加」" /><button class="btn" data-add="disease">＋ 添加</button></div>
@@ -256,11 +261,6 @@
           <label>内容形态</label>
           <div class="pills" id="tm-format"></div>
           <div class="tm-add"><input id="tm-in-format" placeholder="输入新标签，回车或点「添加」" /><button class="btn" data-add="format">＋ 添加</button></div>
-        </div>
-        <div class="field">
-          <label>用户旅程 / 内容深度</label>
-          <div class="pills" id="tm-journey"></div>
-          <div class="tm-add"><input id="tm-in-journey" placeholder="输入新标签，回车或点「添加」" /><button class="btn" data-add="journey">＋ 添加</button></div>
         </div>
         <div class="ed-error" id="tm-error"></div>
       </div>
