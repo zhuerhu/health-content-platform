@@ -51,6 +51,8 @@
         <option value="new">最新优先</option>
         <option value="old">最早优先</option>
         <option value="title">按标题排序</option>
+        <option value="fav">收藏最多优先</option>
+        <option value="favAsc">收藏最少优先</option>
       </select>
       <button id="reset" class="btn">重置筛选</button>
       <button id="refresh" class="btn" title="从线上重新拉取最新内容">↻ 刷新</button>
@@ -145,6 +147,10 @@
           <div class="field">
             <label>创建日期</label>
             <input id="ed-date" type="date" />
+          </div>
+          <div class="field">
+            <label>收藏量<span class="hint">仅用于排序</span></label>
+            <input id="ed-fav" type="number" min="0" step="1" placeholder="0" />
           </div>
         </div>
 
