@@ -1,24 +1,5 @@
 [
   {
-    "id": "1d368b8c-875c-47a0-aabd-5498a3ff1722",
-    "title": "测试内容",
-    "category": "膳食营养库",
-    "diseaseTags": [
-      "糖尿病"
-    ],
-    "formatTags": [
-      "短视频"
-    ],
-    "journeyTags": [],
-    "summary": "",
-    "body": "",
-    "createdAt": "2026-09-11T01:00:00.000Z",
-    "updatedAt": "2026-09-11T08:11:37.268Z",
-    "cover": "media/mtwogiwt-i8idme.png",
-    "video": "",
-    "videoUrl": "https://cms-adultmilkpowder.x.digitalyili.com/s/1N0nFMaa9Lc/"
-  },
-  {
     "id": "e65c755c-2a7c-467f-85b4-fc8727f37bfd",
     "title": "【养生有方】秋风起，那些不能忽略的保养小细节",
     "category": "生活实操库",
